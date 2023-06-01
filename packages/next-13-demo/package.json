@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start:custom": "node custom-server.js",
     "dev:custom": "nodemon",
     "build": "next build",
     "build:custom": "next build && tsc --project tsconfig.server.json",
@@ -19,8 +20,8 @@
     "autoprefixer": "10.4.14",
     "cross-env": "^7.0.3",
     "eslint": "8.40.0",
-    "eslint-config-next": "13.4.2",
-    "next": "13.4.2",
+    "eslint-config-next": "13.4.4",
+    "next": "13.4.4",
     "postcss": "8.4.23",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -28,6 +29,8 @@
     "typescript": "5.0.4"
   },
   "devDependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.1"
   }

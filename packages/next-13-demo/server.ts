@@ -11,30 +11,34 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
   createServer(async (req, res) => {
-    const parsedUrl = parse(req.url!, true);
-    // Get HTML
-    const html = await app.renderToHTML(
-      req,
-      res,
-      parsedUrl.pathname!,
-      parsedUrl.query
-    );
-    // Stencil
-    const renderedHtml = await renderToString(html, {
-      prettyHtml: false,
-      removeHtmlComments: true,
-      clientHydrateAnnotations: false,
-    });
-    // THIS IS WHAT WILL BREAK
-    if (parsedUrl.pathname?.startsWith("/_next") || parsedUrl.pathname?.startsWith("/__next")) {
-      await handle(req, res, parsedUrl);
-    } else {
-      res.end(renderedHtml.html);
-    }
-    // THIS IS WHAT IS DEFAULT
-    // handle(req, res, parsedUrl);
-  }).listen(port);
+    try {
+      const parsedUrl = parse(req.url!, true);
+      const { pathname, query } = parsedUrl;
 
+      if (
+        pathname?.startsWith("/_next") ||
+        pathname?.startsWith("/__next") ||
+        pathname?.startsWith("/favicon.ico") ||
+        pathname?.endsWith("svg")
+      ) {
+        await handle(req, res, parsedUrl);
+      } else {
+        const markup = await app.renderToHTML(req, res, pathname!, query);
+        // Stencil
+        const hydratedMarkup = await renderToString(markup, {
+          prettyHtml: false,
+          removeHtmlComments: false,
+          clientHydrateAnnotations: true,
+        });
+
+        res.end(hydratedMarkup.html);
+      }
+    } catch (err) {
+      console.error("Error occurred handling", req.url, err);
+      res.statusCode = 500;
+      res.end("internal server error");
+    }
+  }).listen(port);
   console.log(
     `> Server listening at http://localhost:${port} as ${
       dev ? "development" : process.env.NODE_ENV

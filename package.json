@@ -2,7 +2,12 @@
   "name": "nextjs-13-stencil-ssr",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "bootstrap": "lerna bootstrap --hoist",
+    "pretest": "eslint packages",
+    "test": "jest",
+    "build": "nx run @matt/stencil-components:build && nx run @matt/react-library:build"
+  },
   "private": true,
   "devDependencies": {
     "lerna": "^6.0.0",
