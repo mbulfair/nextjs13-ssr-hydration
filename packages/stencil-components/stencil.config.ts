@@ -22,6 +22,7 @@ export const config: Config = {
       type: 'dist-hydrate-script', //This will cause the SOURCEMAP_ERROR warning, known issue by ionic/stencil
     },
     reactOutputTarget({
+      includeDefineCustomElements: true,
       componentCorePackage: '@matt/stencil-components',
       proxiesFile: '../react-library/lib/components/stencil-generated/index.ts',
     }),
