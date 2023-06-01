@@ -1,6 +1,0 @@
-{
-  "name": "@matt/stencil-components/hydrate",
-  "description": "StencilComponents component hydration app.",
-  "main": "index.js",
-  "types": "index.d.ts"
-}

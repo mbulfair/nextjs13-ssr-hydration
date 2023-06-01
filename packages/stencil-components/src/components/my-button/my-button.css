@@ -1,0 +1,14 @@
+:host {
+  display: inline-block;
+}
+
+.button {
+  margin: 20px;
+  padding: 20px;
+  background-color: yellow;
+  color: black;
+}
+
+.button:hover {
+  background-color: lightgoldenrodyellow;
+}
