@@ -2,7 +2,10 @@ import { createServer } from "http";
 import { parse } from "url";
 import next from "next";
 // Import Stencil's Hydrate
-import { renderToString } from "@matt/stencil-components/hydrate";
+import {
+  renderToString,
+  createWindowFromHtml,
+} from "@matt/stencil-components/hydrate";
 
 const port = parseInt(process.env.PORT || "3000", 10);
 const dev = process.env.NODE_ENV !== "production";
@@ -23,15 +26,57 @@ app.prepare().then(() => {
       ) {
         await handle(req, res, parsedUrl);
       } else {
-        const markup = await app.renderToHTML(req, res, pathname!, query);
-        // Stencil
-        const hydratedMarkup = await renderToString(markup, {
-          prettyHtml: false,
-          removeHtmlComments: false,
-          clientHydrateAnnotations: true,
-        });
+        const html = (await app.renderToHTML(
+          req,
+          res,
+          pathname!,
+          query
+        )) as string;
 
-        res.end(hydratedMarkup.html);
+        // generate a 'DOM' and insert next generated html into it
+        const win = createWindowFromHtml("", "stencil-ssr");
+        const document = win.document;
+        const bodyElement = document.body;
+        const headElement = document.head;
+
+        const nextHeader = html.match(
+          /(?<=<head([^>]+)?>)((.|\n)*?)(?=<\/head>)/g
+        );
+        const nextBody = /<body([^>]+)?>((.|\n)*?)<\/body>/g.exec(html);
+
+        if (nextHeader) {
+          // head
+          headElement.innerHTML = nextHeader[0];
+        }
+
+        if (nextBody) {
+          // main body content
+          if (nextBody[2]) bodyElement.innerHTML = nextBody[2];
+          // body tag attributes
+          if (nextBody[1]) {
+            const el = document.createElement("html");
+            el.innerHTML = `<div ${nextBody[1]}></div>`;
+
+            const attrs = Array.from(
+              el.getElementsByTagName("div")[0].attributes
+            );
+            attrs.forEach((attr) =>
+              bodyElement.setAttribute(attr.name, attr.value)
+            );
+          }
+        }
+
+        // hydrate stencil components mpw
+        await renderToString(document);
+
+        // pick out stencil style tags and add them to body so next leaves them alone
+        headElement
+          .querySelectorAll("style[sty-id]")
+          .forEach((stencilStyle) => {
+            bodyElement.append(stencilStyle);
+          });
+
+        return res.end(document.documentElement.outerHTML);
       }
     } catch (err) {
       console.error("Error occurred handling", req.url, err);
